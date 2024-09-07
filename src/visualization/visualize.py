@@ -1,18 +1,18 @@
-import pandas as pd
-import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # --------------------------------------------------------------
 # Load data
 # --------------------------------------------------------------
 
-df=pd.read_pickle("../../data/interim/01_data_processed.pkl")
+df = pd.read_pickle("../../data/interim/01_data_processed.pkl")
 
 # --------------------------------------------------------------
 # Plot single columns
 # --------------------------------------------------------------
 
-set_df=df[df["set"]==1]
+set_df = df[df["set"] == 1]
 plt.plot(set_df["acc_y"].reset_index(drop=True))
 
 # --------------------------------------------------------------
@@ -20,14 +20,14 @@ plt.plot(set_df["acc_y"].reset_index(drop=True))
 # --------------------------------------------------------------
 
 for label in df["label"].unique():
-    subset = df[df["label"]==label]
+    subset = df[df["label"] == label]
     fig, ax = plt.subplots()
     plt.plot(subset["acc_y"].reset_index(drop=True), label=label)
     plt.legend()
     plt.show()
 
 for label in df["label"].unique():
-    subset = df[df["label"]==label]
+    subset = df[df["label"] == label]
     fig, ax = plt.subplots()
     plt.plot(subset[:100]["acc_y"].reset_index(drop=True), label=label)
     plt.legend()
