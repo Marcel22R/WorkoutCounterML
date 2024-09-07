@@ -1,95 +1,11 @@
 import pandas as pd
 from glob import glob
 
-single_file_acc=pd.read_csv("../../data/raw/WorkoutCounter/Arnold-press_Erwin_Heavy_1_2024-09-07T165520.758_acceleration.csv")
-
-single_file_gyr=pd.read_csv("../../data/raw/WorkoutCounter/Arnold-press_Erwin_Heavy_1_2024-09-07T165520.758_angular_velocity.csv")
-
-
-files=glob("..\\..\\data\\raw\\WorkoutCounter\\*.csv")
-
-len(files) 
-
-
-
-
-data_path="..\\..\\data\\raw\\WorkoutCounter\\"
-f=files[0]
-print(f)
-
-participant=f.split("-")[0].replace(data_path,"")
-print(participant)
-label=f.split("-")[1]
-category=f.split("-")[2].rstrip("123")
-
-df=pd.read_csv(f)
-
-df["participant"]=participant
-df["category"]=category
-df["label"]=label
-
-
-
-
-
-acc_df=pd.DataFrame()
-gyr_df=pd.DataFrame()
-
-acc_set=1
-gyr_set=1
-
-
-for f in files:
-    data_path="..\\..\\data\\raw\\WorkoutCounter\\"
-    participant=f.split("-")[0].replace(data_path,"")
-    label=f.split("-")[1]
-    category=f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
-        
-    df=pd.read_csv(f)
-
-    df["participant"]=participant
-    df["category"]=category
-    df["label"]=label
-
-    if "Accelerometer" in f:
-        df["set"]=acc_set
-        acc_set+=1
-        acc_df=pd.concat([acc_df,df])   
-
-    if "Gyroscope" in f:
-        df["set"]=gyr_set
-        gyr_set+=1
-        gyr_df=pd.concat([gyr_df,df])   
-
-acc_df.head()
-
-
-
-
-acc_df.info()
-
-pd.to_datetime(df["epoch (ms)"], unit="ms")
-
-acc_df.index=pd.to_datetime(acc_df["epoch (ms)"], unit="ms")
-gyr_df.index=pd.to_datetime(gyr_df["epoch (ms)"], unit="ms")
-
-
-del acc_df["epoch (ms)"]
-del acc_df["time (01:00)"]
-del acc_df["elapsed (s)"]
-
-del gyr_df["epoch (ms)"]
-del gyr_df["time (01:00)"]
-del gyr_df["elapsed (s)"]
-
-
-
-
-files=glob("..\\..\\data\\raw\\WorkoutCounter\\*.csv")
+files=glob("C:\\Users\\Marcel\\Desktop\\Python\\WorkoutCounterML\\data\\raw\\WorkoutCounter\\*.csv")
 
 def read_data_from_files(files):
-    data_path="..\\..\\data\\raw\\WorkoutCounter
-\\"
+    
+    data_path="C:\\Users\\Marcel\\Desktop\\Python\\WorkoutCounterML\\data\\raw\\WorkoutCounter\\"
 
     acc_df=pd.DataFrame()
     gyr_df=pd.DataFrame()
@@ -99,9 +15,10 @@ def read_data_from_files(files):
 
 
     for f in files:
-        participant=f.split("-")[0].replace(data_path,"")
-        label=f.split("-")[1]
-        category=f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
+        
+        participant=f.split("_")[1]
+        label=f.split("_")[0].replace(data_path,"")
+        category=f.split("_")[2]
             
         df=pd.read_csv(f)
 
@@ -109,29 +26,28 @@ def read_data_from_files(files):
         df["category"]=category
         df["label"]=label
 
-        if "Accelerometer" in f:
+        if "acceleration" in f:
             df["set"]=acc_set
             acc_set+=1
             acc_df=pd.concat([acc_df,df])   
 
-        if "Gyroscope" in f:
+        if "angular_velocity" in f:
             df["set"]=gyr_set
             gyr_set+=1
             gyr_df=pd.concat([gyr_df,df])   
 
-    pd.to_datetime(df["epoch (ms)"], unit="ms")
+    pd.to_datetime(df["Timestamp (ms)"], unit="ms")
 
-    acc_df.index=pd.to_datetime(acc_df["epoch (ms)"], unit="ms")
-    gyr_df.index=pd.to_datetime(gyr_df["epoch (ms)"], unit="ms")
+    acc_df.index=pd.to_datetime(acc_df["Timestamp (ms)"], unit="ms")
+    gyr_df.index=pd.to_datetime(gyr_df["Timestamp (ms)"], unit="ms")
 
+    del acc_df["Timestamp (ms)"]
+    del acc_df["ISO DateTime"]
+    del acc_df["Elapsed Time (ms)"]
 
-    del acc_df["epoch (ms)"]
-    del acc_df["time (01:00)"]
-    del acc_df["elapsed (s)"]
-
-    del gyr_df["epoch (ms)"]
-    del gyr_df["time (01:00)"]
-    del gyr_df["elapsed (s)"]
+    del gyr_df["Timestamp (ms)"]
+    del gyr_df["ISO DateTime"]
+    del gyr_df["Elapsed Time (ms)"]
 
     return acc_df, gyr_df
 
@@ -180,5 +96,5 @@ data_resampled.info()
 
 
 
-data_resampled.to_pickle("..\\..\\data\\interim\\01_data_processed.pkl")
-data_resampled.to_csv("..\\..\\data\\interim\\01_data_processed.csv")
+data_resampled.to_pickle("..\\..\\data\\interim\\01_data_processed_workoutCounter.pkl")
+data_resampled.to_csv("..\\..\\data\\interim\\01_data_processed_workoutCounter.csv")
