@@ -54,6 +54,7 @@ gyr_set=1
 
 
 for f in files:
+    data_path="..\\..\\data\\raw\\MetaMotion\\"
     participant=f.split("-")[0].replace(data_path,"")
     label=f.split("-")[1]
     category=f.split("-")[2].rstrip("123").rstrip("_MetaWear_2019")
@@ -107,6 +108,8 @@ del gyr_df["elapsed (s)"]
 files=glob("..\\..\\data\\raw\\MetaMotion\\*.csv")
 
 def read_data_from_files(files):
+    data_path="..\\..\\data\\raw\\MetaMotion\\"
+
     acc_df=pd.DataFrame()
     gyr_df=pd.DataFrame()
 
@@ -171,9 +174,9 @@ data_merged.columns=[
     "gyr_x",
     "gyr_y",
     "gyr_z",
-    "label",
-    "category",
     "participant",
+    "category",
+    "label",
     "set"
 ]
 
@@ -209,4 +212,3 @@ data_resampled.info()
 
 data_resampled.to_pickle("..\\..\\data\\interim\\01_data_processed.pkl")
 data_resampled.to_csv("..\\..\\data\\interim\\01_data_processed.csv")
-
