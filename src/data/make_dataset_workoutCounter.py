@@ -94,5 +94,5 @@ data_resampled = pd.concat(
 data_resampled.info()
 
 
-data_resampled.to_pickle("..\\..\\data\\interim\\01_data_processed_workoutCounter.pkl")
-data_resampled.to_csv("..\\..\\data\\interim\\01_data_processed_workoutCounter.csv")
+data_resampled.to_pickle("../../data/interim/01_data_processed_workoutCounter.pkl")
+data_resampled.to_csv("../../data/interim/01_data_processed_workoutCounter.csv")
