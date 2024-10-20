@@ -1,0 +1,91 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import pandas as pd
+import numpy as np
+import optuna
+
+# Define a simple feedforward neural network using PyTorch
+class SimpleNN(nn.Module):
+    def __init__(self, input_size, hidden_units1, hidden_units2, num_classes):
+        super(SimpleNN, self).__init__()
+        self.fc1 = nn.Linear(input_size, hidden_units1)  # First hidden layer
+        self.fc2 = nn.Linear(hidden_units1, hidden_units2)  # Second hidden layer
+        self.output = nn.Linear(hidden_units2, num_classes)  # Output layer
+    
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))  # ReLU activation for first hidden layer
+        x = torch.relu(self.fc2(x))  # ReLU activation for second hidden layer
+        x = torch.softmax(self.output(x), dim=1)  # Softmax for output layer (classification)
+        return x
+
+# Load and preprocess data again for final training
+df = pd.read_pickle("../data/pipeline/02_outliers_removed_chauvenet.pkl")
+df_train = df.drop(["participant", "category", "set"], axis=1)
+X = df_train.drop("label", axis=1).values
+Y = df_train["label"].values
+
+# Convert labels to one-hot encoding
+lb = LabelBinarizer()
+Y = lb.fit_transform(Y)
+
+# Split data into training and test sets
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.25, random_state=42, stratify=Y
+)
+
+# Convert to PyTorch tensors
+X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
+Y_train_tensor = torch.tensor(Y_train, dtype=torch.float32)
+X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
+Y_test_tensor = torch.tensor(Y_test, dtype=torch.float32)
+
+# Create datasets and data loaders
+train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
+test_dataset = TensorDataset(X_test_tensor, Y_test_tensor)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+# Initialize the model with the best hyperparameters
+model = SimpleNN(input_size=X_train.shape[1], hidden_units1=36, hidden_units2=128, num_classes=Y_train.shape[1])
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.0012077729578748326)
+
+# Train the model
+num_epochs = 50
+for epoch in range(num_epochs):
+    model.train()
+    running_loss = 0.0
+    
+    for batch_X, batch_Y in train_loader:
+        optimizer.zero_grad()
+        outputs = model(batch_X)
+        loss = criterion(outputs, torch.max(batch_Y, 1)[1])
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
+    
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_loader):.4f}')
+
+# Evaluate the model on the test set
+model.eval()
+all_preds = []
+all_labels = []
+
+with torch.no_grad():
+    for batch_X, batch_Y in test_loader:
+        outputs = model(batch_X)
+        _, predicted = torch.max(outputs, 1)
+        all_preds.append(predicted.cpu().numpy())
+        all_labels.append(torch.max(batch_Y, 1)[1].cpu().numpy())
+
+# Convert list of predictions and labels to arrays
+all_preds = np.concatenate(all_preds)
+all_labels = np.concatenate(all_labels)
+
+# Classification report
+print(classification_report(all_labels, all_preds, target_names=lb.classes_))

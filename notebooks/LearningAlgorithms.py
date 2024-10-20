@@ -145,7 +145,7 @@ class ClassificationAlgorithms:
                     initial_type = [('input', FloatTensorType([None, n_features]))]
                     print(f"Attempting to save neural network with {n_features}")
                     converted_model=convert_sklearn(nn, initial_types=initial_type)
-                    with open(f"../models/neuralNetwork_model_{n_features}_features.onnx", "wb") as f:
+                    with open(f"../models/neural_network_model_{n_features}_features.onnx", "wb") as f:
                         f.write(converted_model.SerializeToString())
 
 

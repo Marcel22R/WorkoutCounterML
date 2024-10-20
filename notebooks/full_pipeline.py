@@ -17,6 +17,8 @@ import seaborn as sns
 import itertools
 from sklearn.metrics import accuracy_score, confusion_matrix
 
+import onnxruntime as rt
+
 
 # Goes all the way from processed data to ort model
 
@@ -283,7 +285,15 @@ def main(relativeUrl, outlierMethod, myData):
 
     outliers_removed_df.info()
 
-    chosenMethod={"c":"chauvenets", "i": "iqr", "l": "lof"}
+    chosenMethod={"c":"chauvenet", "i": "iqr", "l": "lof"}
+    predictor_columns = list(df.columns[:6])
+
+    # --------------------------------------------------------------
+    # Dealing with missing values (imputation)
+    # --------------------------------------------------------------
+
+    for col in predictor_columns:
+        outliers_removed_df[col] = outliers_removed_df[col].interpolate()
 
     # --------------------------------------------------------------
     # Export new dataframe
@@ -292,20 +302,12 @@ def main(relativeUrl, outlierMethod, myData):
 
     df=outliers_removed_df
 
-    predictor_columns = list(df.columns[:6])
 
     plt.style.use("fivethirtyeight")
     plt.rcParams["figure.figsize"] = (20, 5)
     plt.rcParams["figure.dpi"] = 100
     plt.rcParams["lines.linewidth"] = 2
 
-
-    # --------------------------------------------------------------
-    # Dealing with missing values (imputation)
-    # --------------------------------------------------------------
-
-    for col in predictor_columns:
-        df[col] = df[col].interpolate()
 
     # --------------------------------------------------------------
     # Calculating set duration
@@ -922,6 +924,10 @@ def main(relativeUrl, outlierMethod, myData):
     plt.show()
 
 
+ 
+
+
+
 
 
 
@@ -1074,4 +1080,4 @@ def mark_outliers_lof(dataset, columns, n=20):
 relativeUrlWorkoutCounter="../data/interim/01_data_processed_workoutCounter.pkl"
 relativeUrlDave="../data/interim/01_data_processed.pkl"
 outlierMethod="c"
-main(relativeUrlDave, outlierMethod, myData=False)
+main(relativeUrlWorkoutCounter, outlierMethod, myData=True)
