@@ -9,19 +9,21 @@
 
 # Updated by Dave Ebbelaar on 12-01-2023
 
-from sklearn.neural_network import MLPClassifier
-from sklearn.svm import SVC
-from sklearn.svm import LinearSVC
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn import tree
-from sklearn.naive_bayes import GaussianNB
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import accuracy_score
-import pandas as pd
-import numpy as np
 import copy
+
+import numpy as np
+import pandas as pd
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC, LinearSVC
+from sklearn.tree import DecisionTreeClassifier
 
 
 class ClassificationAlgorithms:
@@ -93,6 +95,7 @@ class ClassificationAlgorithms:
         learning_rate="adaptive",
         gridsearch=True,
         print_model_details=False,
+        saveModel=False,
     ):
 
         if gridsearch:
@@ -136,6 +139,15 @@ class ClassificationAlgorithms:
             train_X,
             train_y.values.ravel(),
         )
+
+        if saveModel:
+                    n_features=train_X.shape[1]
+                    initial_type = [('input', FloatTensorType([None, n_features]))]
+                    print(f"Attempting to save neural network with {n_features}")
+                    converted_model=convert_sklearn(nn, initial_types=initial_type)
+                    with open(f"../../models/neuralNetwork_model_{n_features}_features.onnx", "wb") as f:
+                        f.write(converted_model.SerializeToString())
+
 
         if gridsearch and print_model_details:
             print(nn.best_params_)
@@ -307,6 +319,7 @@ class ClassificationAlgorithms:
         export_tree_path="Example_graphs/Chapter7/",
         export_tree_name="tree.dot",
         gridsearch=True,
+        saveModel=False
     ):
         # Create the model
         if gridsearch:
@@ -327,6 +340,15 @@ class ClassificationAlgorithms:
         # Fit the model
 
         dtree.fit(train_X, train_y.values.ravel())
+        
+        # save the model
+        if saveModel:
+            n_features=train_X.shape[1]
+            print(f"Attempting to save decision tree model with {n_features} features")
+            initial_type = [('input', FloatTensorType([None, n_features]))]
+            converted_model=convert_sklearn(dtree, initial_types=initial_type)
+            with open(f"../../models/decision_tree_model_{n_features}_features.onnx", "wb") as f:
+                f.write(converted_model.SerializeToString())
 
         if gridsearch and print_model_details:
             print(dtree.best_params_)
@@ -368,6 +390,7 @@ class ClassificationAlgorithms:
                 feature_names=train_X.columns,
                 class_names=dtree.classes_,
             )
+            
 
         return pred_training_y, pred_test_y, frame_prob_training_y, frame_prob_test_y
 
@@ -407,6 +430,7 @@ class ClassificationAlgorithms:
         criterion="gini",
         print_model_details=False,
         gridsearch=True,
+        saveModel=False
     ):
 
         if gridsearch:
@@ -430,6 +454,17 @@ class ClassificationAlgorithms:
         # Fit the model
 
         rf.fit(train_X, train_y.values.ravel())
+
+          # save the model
+        if saveModel:
+            n_features=train_X.shape[1]
+            initial_type = [('input', FloatTensorType([None, n_features]))]
+            print(f"Attempting to save random forest model with {n_features}")
+            converted_model=convert_sklearn(rf, initial_types=initial_type)
+            with open(f"../../models/randomForest_model_{n_features}_features.onnx", "wb") as f:
+                f.write(converted_model.SerializeToString())
+
+    
 
         if gridsearch and print_model_details:
             print(rf.best_params_)

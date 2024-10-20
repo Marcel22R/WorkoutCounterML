@@ -16,7 +16,8 @@ plt.rcParams["lines.linewidth"] = 2
 
 df = pd.read_pickle("../../data/interim/03_data_features.pkl")
 
-# --------------------------------------------------------------
+
+# ---------------------------a-----------------------------------
 # Create a training and test set
 # --------------------------------------------------------------
 
@@ -73,9 +74,9 @@ feature_set_4 = list(set(feature_set_3 + freq_features + cluster_features))
 learner = ClassificationAlgorithms()
 
 max_features = 10
-selected_features, ordered_features, ordered_scores = learner.forward_selection(
-    max_features, X_train, Y_train
-)
+# selected_features, ordered_features, ordered_scores = learner.forward_selection(
+#     max_features, X_train, Y_train
+# )
 selected_features = [
     "duration",
     "acc_x",
@@ -159,6 +160,7 @@ for i, f in zip(range(len(possible_feature_sets)), feature_names):
             Y_train,
             selected_test_X,
             gridsearch=False,
+            saveModel=True
         )
         performance_test_nn += accuracy_score(Y_test, class_test_y)
 
@@ -169,7 +171,7 @@ for i, f in zip(range(len(possible_feature_sets)), feature_names):
             class_train_prob_y,
             class_test_prob_y,
         ) = learner.random_forest(
-            selected_train_X, Y_train, selected_test_X, gridsearch=True
+            selected_train_X, Y_train, selected_test_X, gridsearch=True, saveModel=True
         )
         performance_test_rf += accuracy_score(Y_test, class_test_y)
 
@@ -195,7 +197,7 @@ for i, f in zip(range(len(possible_feature_sets)), feature_names):
         class_train_prob_y,
         class_test_prob_y,
     ) = learner.decision_tree(
-        selected_train_X, Y_train, selected_test_X, gridsearch=True
+        selected_train_X, Y_train, selected_test_X, gridsearch=True,saveModel=True
     )
     performance_test_dt = accuracy_score(Y_test, class_test_y)
 
