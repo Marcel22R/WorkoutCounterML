@@ -19,7 +19,7 @@ plt.rcParams["lines.linewidth"] = 2
 # Load data
 # --------------------------------------------------------------
 
-df = pd.read_pickle("../../data/interim/01_data_processed_workoutCounter.pkl")
+df = pd.read_pickle("../data/interim/01_data_processed_workoutCounter.pkl")
 df = df[df["label"] != "Break"]
 
 df["label"].unique()
