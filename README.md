@@ -1,3 +1,4 @@
-## Data Science Project Template
+##  Workout Counter Data Analysis
 
-You can use this template to structure your Python data science projects. It is based on [Cookie Cutter Data Science](https://drivendata.github.io/cookiecutter-data-science/).
+
+Demonstrates the process of analysing data for a counting prototype
