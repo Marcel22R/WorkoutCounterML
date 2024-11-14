@@ -28,3 +28,7 @@ The file full_pipeline.py runs all the code from start to finish and shows all t
 
 ![image](https://github.com/user-attachments/assets/7bf0bee2-8755-4afb-95ea-8cb85edf52ca)
 
+### Confusion matrix
+
+![image](https://github.com/user-attachments/assets/77529e5f-a46d-4906-9db0-b62874abdb53)
+
