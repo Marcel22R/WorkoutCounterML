@@ -860,7 +860,7 @@ def main(relativeUrl, outlierMethod, myData):
     # create confusion matrix for cm
     plt.figure(figsize=(10, 10))
     plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
+    plt.title("Confusion matrix Random forest. Training Set 4 of 5 people")
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
@@ -903,7 +903,7 @@ def main(relativeUrl, outlierMethod, myData):
     # create confusion matrix for cm
     plt.figure(figsize=(10, 10))
     plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
+    plt.title("Confusion matrix neural network")
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
