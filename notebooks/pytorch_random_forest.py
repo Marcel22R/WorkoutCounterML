@@ -10,10 +10,12 @@ from skl2onnx.common.data_types import FloatTensorType
 import onnxruntime as ort
 
 # Load and preprocess data
-df = pd.read_pickle("../data/pipeline/02_outliers_removed_chauvenet.pkl")
+df = pd.read_pickle("../data/interim/02_outliers_removed_linAcc_iqr.pkl")
 df_train = df.drop(["participant", "category", "set"], axis=1)
 X = df_train.drop("label", axis=1).values
 Y = df_train["label"].values
+
+
 
 # Convert labels to one-hot encoding
 lb = LabelBinarizer()

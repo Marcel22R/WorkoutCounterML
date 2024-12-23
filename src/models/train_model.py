@@ -323,8 +323,8 @@ plt.show()
     class_test_y,
     class_train_prob_y,
     class_test_prob_y,
-) = learner.random_forest(
-    X_train[feature_set_4], Y_train, X_test[feature_set_4], gridsearch=True
+) = learner.k_nearest_neighbor(
+    X_train[selected_features], Y_train, X_test[selected_features], gridsearch=True
 )
 
 accuracy=accuracy_score(Y_test, class_test_y)
