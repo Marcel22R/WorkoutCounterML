@@ -598,35 +598,35 @@ def main(relativeUrl, outlierMethod, myData):
     learner = ClassificationAlgorithms()
 
     max_features = 10
-    # selected_features, ordered_features, ordered_scores = learner.forward_selection(
-    #     max_features, X_train, Y_train
-    # )
-    selected_features = [
-        "duration",
-        "acc_x",
-        "pca_2",
-        "gyr_r_freq_0.0_Hz_ws_14",
-        "gyr_r_temp_std_ws_5",
-        "gyr_y",
-        "gyr_z_freq_2.143_Hz_ws_14",
-        "acc_y_freq_0.714_Hz_ws_14",
-        "gyr_r_freq_1.786_Hz_ws_14",
-        "gyr_r_freq_1.071_Hz_ws_14",
-    ]
+    selected_features, ordered_features, ordered_scores = learner.forward_selection(
+         max_features, X_train, Y_train
+     )
+    # selected_features = [
+    #     "duration",
+    #     "acc_x",
+    #     "pca_2",
+    #     "gyr_r_freq_0.0_Hz_ws_14",
+    #     "gyr_r_temp_std_ws_5",
+    #     "gyr_y",
+    #     "gyr_z_freq_2.143_Hz_ws_14",
+    #     "acc_y_freq_0.714_Hz_ws_14",
+    #     "gyr_r_freq_1.786_Hz_ws_14",
+    #     "gyr_r_freq_1.071_Hz_ws_14",
+    # ]
 
 
-    ordered_scores = [
-        0.787715649088462,
-        0.9635384803621682,
-        0.9904563807659367,
-        0.9963293772176679,
-        0.9974305640523675,
-        0.9977976263306008,
-        0.9980423345160896,
-        0.9980423345160896,
-        0.9980423345160896,
-        0.9980423345160896,
-    ]
+    # ordered_scores = [
+    #     0.787715649088462,
+    #     0.9635384803621682,
+    #     0.9904563807659367,
+    #     0.9963293772176679,
+    #     0.9974305640523675,
+    #     0.9977976263306008,
+    #     0.9980423345160896,
+    #     0.9980423345160896,
+    #     0.9980423345160896,
+    #     0.9980423345160896,
+    # ]
 
 
     plt.figure(figsize=(10, 5))
@@ -735,8 +735,19 @@ def main(relativeUrl, outlierMethod, myData):
 
         performance_test_nb = accuracy_score(Y_test, class_test_y)
 
+        print("\tTraining support vector machine")
+       
+        (
+            class_train_y,
+            class_test_y,
+            class_train_prob_y,
+            class_test_prob_y,
+        ) = learner.support_vector_machine_without_kernel(selected_train_X, Y_train, selected_test_X)
+
+        performance_test_svm=accuracy_score(Y_test, class_test_y)
+
         # Save results to dataframe
-        models = ["NN", "RF", "KNN", "DT", "NB"]
+        models = ["NN", "RF", "KNN", "DT", "NB", "SVM"]
         new_scores = pd.DataFrame(
             {
                 "model": models,
@@ -747,6 +758,7 @@ def main(relativeUrl, outlierMethod, myData):
                     performance_test_knn,
                     performance_test_dt,
                     performance_test_nb,
+                    performance_test_svm,
                 ],
             }
         )
