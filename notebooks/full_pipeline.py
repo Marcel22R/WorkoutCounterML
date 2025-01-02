@@ -15,35 +15,54 @@ from sklearn.model_selection import train_test_split
 from LearningAlgorithms import ClassificationAlgorithms
 import seaborn as sns
 import itertools
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 
 import onnxruntime as rt
 
 
 # Goes all the way from processed data to ort model
 
+
 def main(relativeUrl, outlierMethod, myData):
     df = pd.read_pickle(relativeUrl)
 
-    marcelLabels={"overhead":"Arnold-press", "bench":"Flat-bench-press", "back":"Lat-Pulldown", "pull":"Romanian-deadlift", "squat":"Squats", "break":"Break"}
-    daveLabels={"overhead":"Ohp", "bench":"bench", "back":"Row", "pull":"Dead", "squat":"squat", "break":"Rest"}
+    marcelLabels = {
+        "overhead": "Arnold-press",
+        "bench": "Flat-bench-press",
+        "back": "Lat-Pulldown",
+        "pull": "Romanian-deadlift",
+        "squat": "Squats",
+        "break": "Break",
+    }
+    daveLabels = {
+        "overhead": "Ohp",
+        "bench": "bench",
+        "back": "Row",
+        "pull": "Dead",
+        "squat": "squat",
+        "break": "Rest",
+    }
 
-    daveParticipants={"A":"A", "B":"B", "C":"C", "D":"D","E":"E"}
-    marcelParticipants={"A": "Arzoo", "B":"Marcel", "C": "Pascal", "D": "Eugen","E": "Erwin"}
+    daveParticipants = {"A": "A", "B": "B", "C": "C", "D": "D", "E": "E"}
+    marcelParticipants = {
+        "A": "Arzoo",
+        "B": "Marcel",
+        "C": "Pascal",
+        "D": "Eugen",
+        "E": "Erwin",
+    }
 
-    daveTimeStamps={"timestamps": "epoch (ms)"}
-    marcelTimeStamps={"timestamps": "Timestamp (ms)"}
+    daveTimeStamps = {"timestamps": "epoch (ms)"}
+    marcelTimeStamps = {"timestamps": "Timestamp (ms)"}
 
+    myLabels = daveLabels
+    myParticipants = daveParticipants
+    myTimeStamps = daveTimeStamps
 
-    myLabels=daveLabels
-    myParticipants=daveParticipants
-    myTimeStamps=daveTimeStamps
-
-
-    if(myData):
-        myLabels=marcelLabels
-        myParticipants=marcelParticipants
-        myTimeStamps=marcelTimeStamps
+    if myData:
+        myLabels = marcelLabels
+        myParticipants = marcelParticipants
+        myTimeStamps = marcelTimeStamps
 
     # --------------------------------------------------------------
     # Plot single columns
@@ -83,7 +102,9 @@ def main(relativeUrl, outlierMethod, myData):
     # --------------------------------------------------------------
 
     participant_df = (
-        df.query(f"label == '{myLabels['bench']}'").sort_values("participant").reset_index()
+        df.query(f"label == '{myLabels['bench']}'")
+        .sort_values("participant")
+        .reset_index()
     )
     fix, ax = plt.subplots()
     participant_df.groupby(["participant"])["acc_y"].plot()
@@ -95,10 +116,12 @@ def main(relativeUrl, outlierMethod, myData):
     # Plot multiple axis
     # --------------------------------------------------------------
 
-    label = myLabels['squat']
-    participant = myParticipants['E']
+    label = myLabels["squat"]
+    participant = myParticipants["E"]
     all_axis_df = (
-        df.query(f"label=='{label}'").query(f"participant=='{participant}'").reset_index()
+        df.query(f"label=='{label}'")
+        .query(f"participant=='{participant}'")
+        .reset_index()
     )
 
     fix, ax = plt.subplots()
@@ -106,7 +129,6 @@ def main(relativeUrl, outlierMethod, myData):
     ax.set_ylabel("acc_y")
     ax.set_xlabel("samples")
     plt.legend()
-
 
     # --------------------------------------------------------------
     # Create a loop to plot all combinations per sensor
@@ -149,8 +171,8 @@ def main(relativeUrl, outlierMethod, myData):
     # Combine plots in one figure
     # --------------------------------------------------------------
 
-    label = myLabels['squat']
-    participant = myParticipants['B']
+    label = myLabels["squat"]
+    participant = myParticipants["B"]
     combined_plot_df = (
         df.query(f"label=='{label}'")
         .query(f"participant=='{participant}'")
@@ -161,10 +183,18 @@ def main(relativeUrl, outlierMethod, myData):
     combined_plot_df[["gyr_x", "gyr_y", "gyr_z"]].plot(ax=ax[1])
 
     ax[0].legend(
-        loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3, fancybox=True, shadow=True
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=3,
+        fancybox=True,
+        shadow=True,
     )
     ax[1].legend(
-        loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3, fancybox=True, shadow=True
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.15),
+        ncol=3,
+        fancybox=True,
+        shadow=True,
     )
     ax[1].set_xlabel("samples")
     # --------------------------------------------------------------
@@ -202,12 +232,14 @@ def main(relativeUrl, outlierMethod, myData):
                 )
                 ax[1].set_xlabel("samples")
                 plt.suptitle(f"{label} {participant}".title(), y=0.95)
-                plt.savefig(f"../reports/pipelineFigures/{label.title()}_{participant}.png")
+                plt.savefig(
+                    f"../reports/pipelineFigures/{label.title()}_{participant}.png"
+                )
                 plt.show()
 
-    df=pd.read_pickle(relativeUrl)
+    df = pd.read_pickle(relativeUrl)
 
-    outlier_columns=list(df.columns[:6])
+    outlier_columns = list(df.columns[:6])
     print(f"Outlier columns: {outlier_columns}")
 
     # --------------------------------------------------------------
@@ -215,77 +247,102 @@ def main(relativeUrl, outlierMethod, myData):
     # --------------------------------------------------------------
 
     plt.style.use("fivethirtyeight")
-    plt.rcParams["figure.figsize"] =(20,5)
-    plt.rcParams["figure.dpi"]=100
+    plt.rcParams["figure.figsize"] = (20, 5)
+    plt.rcParams["figure.dpi"] = 100
 
-    df[["acc_x", "label"]].boxplot(by="label",figsize=(20,10))
-    df[outlier_columns[:3]+["label"]].boxplot(by="label",figsize=(20,10), layout=(1,3))
-    df[outlier_columns[3:]+["label"]].boxplot(by="label",figsize=(20,10), layout=(1,3))
+    df[["acc_x", "label"]].boxplot(by="label", figsize=(20, 10))
+    df[outlier_columns[:3] + ["label"]].boxplot(
+        by="label", figsize=(20, 10), layout=(1, 3)
+    )
+    df[outlier_columns[3:] + ["label"]].boxplot(
+        by="label", figsize=(20, 10), layout=(1, 3)
+    )
 
-        # Plot a single column
+    # Plot a single column
     col = "acc_x"
-    dataset= mark_outliers_iqr(df, col)
-    plot_binary_outliers(dataset=dataset,col=col, outlier_col=col+"_outlier", reset_index=True)
+    dataset = mark_outliers_iqr(df, col)
+    plot_binary_outliers(
+        dataset=dataset, col=col, outlier_col=col + "_outlier", reset_index=True
+    )
 
     # Loop over all columns
 
     for col in outlier_columns:
-        dataset= mark_outliers_iqr(df, col)
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col=col+"_outlier", reset_index=True)
-    
-    df[outlier_columns[:3]+["label"]].plot.hist(by="label",figsize=(20,10), layout=(3,3))
-    df[outlier_columns[3:]+["label"]].plot.hist(by="label",figsize=(20,10), layout=(3,3))
+        dataset = mark_outliers_iqr(df, col)
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col=col + "_outlier", reset_index=True
+        )
+
+    df[outlier_columns[:3] + ["label"]].plot.hist(
+        by="label", figsize=(20, 10), layout=(3, 3)
+    )
+    df[outlier_columns[3:] + ["label"]].plot.hist(
+        by="label", figsize=(20, 10), layout=(3, 3)
+    )
 
     for col in outlier_columns:
-        dataset= mark_outliers_chauvenet(df, col)
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col=col+"_outlier", reset_index=True)
+        dataset = mark_outliers_chauvenet(df, col)
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col=col + "_outlier", reset_index=True
+        )
 
-    dataset, outliers, X_scores=mark_outliers_lof(df, outlier_columns)
+    dataset, outliers, X_scores = mark_outliers_lof(df, outlier_columns)
     for col in outlier_columns:
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col="outlier_lof", reset_index=True)
-
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col="outlier_lof", reset_index=True
+        )
 
     # --------------------------------------------------------------
     # Check outliers grouped by label
     # --------------------------------------------------------------
-    label=myLabels['bench']
+    label = myLabels["bench"]
 
     for col in outlier_columns:
-        dataset= mark_outliers_iqr(df[df["label"]==label], col)
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col=col+"_outlier", reset_index=True)
+        dataset = mark_outliers_iqr(df[df["label"] == label], col)
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col=col + "_outlier", reset_index=True
+        )
 
-    label=myLabels['bench']
+    label = myLabels["bench"]
 
     for col in outlier_columns:
-        dataset= mark_outliers_chauvenet(df[df["label"]==label], col)
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col=col+"_outlier", reset_index=True)
+        dataset = mark_outliers_chauvenet(df[df["label"] == label], col)
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col=col + "_outlier", reset_index=True
+        )
 
-    dataset, outliers, X_scores=mark_outliers_lof(df[df["label"]==label], outlier_columns)
+    dataset, outliers, X_scores = mark_outliers_lof(
+        df[df["label"] == label], outlier_columns
+    )
     for col in outlier_columns:
-        plot_binary_outliers(dataset=dataset,col=col, outlier_col="outlier_lof", reset_index=True)
+        plot_binary_outliers(
+            dataset=dataset, col=col, outlier_col="outlier_lof", reset_index=True
+        )
 
-    col="gyr_z"
-    dataset=mark_outliers_chauvenet(df, col=col)
+    col = "gyr_z"
+    dataset = mark_outliers_chauvenet(df, col=col)
 
     dataset[dataset["gyr_z_outlier"]]
 
-    dataset.loc[dataset["gyr_z_outlier"], "gyr_z"]=np.nan
+    dataset.loc[dataset["gyr_z_outlier"], "gyr_z"] = np.nan
 
     # Create a loop
-    outliers_removed_df=df.copy()
+    outliers_removed_df = df.copy()
     for col in outlier_columns:
         for label in df["label"].unique():
-            dataset= mark_outliers_iqr(df[df["label"]==label], col)
-            dataset.loc[dataset[col+"_outlier"], col]=np.nan
-            outliers_removed_df.loc[(outliers_removed_df["label"]==label),col]=dataset[col]
-            n_outliers=len(dataset)-len(dataset[col].dropna())
+            dataset = mark_outliers_iqr(df[df["label"] == label], col)
+            dataset.loc[dataset[col + "_outlier"], col] = np.nan
+            outliers_removed_df.loc[(outliers_removed_df["label"] == label), col] = (
+                dataset[col]
+            )
+            n_outliers = len(dataset) - len(dataset[col].dropna())
             print(f"removed {n_outliers} outliers from {col} for {label}")
 
     outliers_removed_df
 
     outliers_removed_df.info()
 
-    chosenMethod={"c":"chauvenet", "i": "iqr", "l": "lof"}
+    chosenMethod = {"c": "chauvenet", "i": "iqr", "l": "lof"}
     predictor_columns = list(df.columns[:6])
 
     # --------------------------------------------------------------
@@ -298,23 +355,22 @@ def main(relativeUrl, outlierMethod, myData):
     # --------------------------------------------------------------
     # Export new dataframe
     # --------------------------------------------------------------
-    outliers_removed_df.to_pickle(f"../data/pipeline/02_outliers_removed_{chosenMethod[outlierMethod]}.pkl")
+    outliers_removed_df.to_pickle(
+        f"../data/pipeline/02_outliers_removed_{chosenMethod[outlierMethod]}.pkl"
+    )
 
-    df=outliers_removed_df
-
+    df = outliers_removed_df
 
     plt.style.use("fivethirtyeight")
     plt.rcParams["figure.figsize"] = (20, 5)
     plt.rcParams["figure.dpi"] = 100
     plt.rcParams["lines.linewidth"] = 2
 
-
     # --------------------------------------------------------------
     # Calculating set duration
     # --------------------------------------------------------------
 
     df[df["set"] == 28]["acc_y"].plot()
-
 
     duration = df[df["set"] == 2].index[-1] - df[df["set"] == 2].index[0]
     duration.seconds
@@ -337,7 +393,6 @@ def main(relativeUrl, outlierMethod, myData):
     df_lowpass = df.copy()
     LowPass = LowPassFilter()
 
-
     fs = 1000 / 200
     cutoff = 1.3
 
@@ -347,16 +402,20 @@ def main(relativeUrl, outlierMethod, myData):
 
     fig, ax = plt.subplots(nrows=2, sharex=True, figsize=(20, 10))
     ax[0].plot(subset["acc_y"].reset_index(drop=True), label="raw data")
-    ax[1].plot(subset["acc_y_lowpass"].reset_index(drop=True), label="butterworth filter")
-    ax[0].legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True)
-    ax[1].legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True)
-
+    ax[1].plot(
+        subset["acc_y_lowpass"].reset_index(drop=True), label="butterworth filter"
+    )
+    ax[0].legend(
+        loc="upper center", bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True
+    )
+    ax[1].legend(
+        loc="upper center", bbox_to_anchor=(0.5, 1.15), fancybox=True, shadow=True
+    )
 
     for col in predictor_columns:
         df_lowpass = LowPass.low_pass_filter(df_lowpass, col, fs, cutoff, order=5)
         df_lowpass[col] = df_lowpass[col + "_lowpass"]
         del df_lowpass[col + "_lowpass"]
-
 
     # --------------------------------------------------------------
     # Principal component analysis PCA
@@ -385,15 +444,18 @@ def main(relativeUrl, outlierMethod, myData):
 
     df_squared = df_pca.copy()
 
-    acc_r = df_squared["acc_x"] ** 2 + df_squared["acc_y"] ** 2 + df_squared["acc_z"] ** 2
-    gyr_r = df_squared["gyr_x"] ** 2 + df_squared["gyr_y"] ** 2 + df_squared["gyr_z"] ** 2
+    acc_r = (
+        df_squared["acc_x"] ** 2 + df_squared["acc_y"] ** 2 + df_squared["acc_z"] ** 2
+    )
+    gyr_r = (
+        df_squared["gyr_x"] ** 2 + df_squared["gyr_y"] ** 2 + df_squared["gyr_z"] ** 2
+    )
 
     df_squared["acc_r"] = np.sqrt(acc_r)
     df_squared["gyr_r"] = np.sqrt(gyr_r)
 
     subset = df_squared[df_squared["set"] == 12]
     subset[["acc_r", "gyr_r"]].plot(subplots=True)
-
 
     # --------------------------------------------------------------
     # Temporal abstraction
@@ -424,14 +486,12 @@ def main(relativeUrl, outlierMethod, myData):
     subset[["acc_y", "acc_y_temp_mean_ws_5", "acc_y_temp_std_ws_5"]].plot()
     subset[["gyr_y", "gyr_y_temp_mean_ws_5", "gyr_y_temp_std_ws_5"]].plot()
 
-
     # --------------------------------------------------------------
     # Frequency features
     # --------------------------------------------------------------
 
     df_freq = df_temporal.copy().reset_index()
     FreqAbs = FourierTransformation()
-
 
     fs = int(1000 / 200)
     ws = int(2800 / 200)
@@ -459,11 +519,7 @@ def main(relativeUrl, outlierMethod, myData):
         subset = FreqAbs.abstract_frequency(subset, predictor_columns, ws, fs)
         df_freq_list.append(subset)
 
-
-    
-
-    df_freq = pd.concat(df_freq_list).set_index(myTimeStamps['timestamps'], drop=True)
-
+    df_freq = pd.concat(df_freq_list).set_index(myTimeStamps["timestamps"], drop=True)
 
     # --------------------------------------------------------------
     # Dealing with overlapping windows
@@ -488,22 +544,20 @@ def main(relativeUrl, outlierMethod, myData):
         cluster_labels = kmeans.fit_predict(subset)
         inertias.append(kmeans.inertia_)
 
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=(10, 10))
     plt.plot(k_values, inertias)
     plt.xlabel("k")
     plt.ylabel("Sum of squared distances")
     plt.show()
 
-
     kmeans = KMeans(n_clusters=5, n_init=20, random_state=0)
     subset = df_cluster[cluster_columns]
     df_cluster["cluster"] = kmeans.fit_predict(subset)
 
-
-    fig=plt.figure(figsize=(15,15))
-    ax= fig.add_subplot(projection="3d")
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(projection="3d")
     for c in df_cluster["cluster"].unique():
-        subset=df_cluster[df_cluster["cluster"]==c]
+        subset = df_cluster[df_cluster["cluster"] == c]
         ax.scatter(subset["acc_x"], subset["acc_y"], subset["acc_z"], label=c)
 
     ax.set_xlabel("X-axis")
@@ -512,11 +566,10 @@ def main(relativeUrl, outlierMethod, myData):
     plt.legend()
     plt.show()
 
-
-    fig=plt.figure(figsize=(15,15))
-    ax= fig.add_subplot(projection="3d")
+    fig = plt.figure(figsize=(15, 15))
+    ax = fig.add_subplot(projection="3d")
     for c in df_cluster["label"].unique():
-        subset=df_cluster[df_cluster["label"]==c]
+        subset = df_cluster[df_cluster["label"] == c]
         ax.scatter(subset["acc_x"], subset["acc_y"], subset["acc_z"], label=c)
 
     ax.set_xlabel("X-axis")
@@ -540,7 +593,6 @@ def main(relativeUrl, outlierMethod, myData):
 
     df = pd.read_pickle("../data/pipeline/03_data_features.pkl")
 
-
     # ---------------------------a-----------------------------------
     # Create a training and test set
     # --------------------------------------------------------------
@@ -556,7 +608,6 @@ def main(relativeUrl, outlierMethod, myData):
 
     X_train.info()
 
-
     fig, ax = plt.subplots(figsize=(10, 5))
     df_train["label"].value_counts().plot(
         kind="bar", ax=ax, color="lightblue", label="Total"
@@ -565,7 +616,6 @@ def main(relativeUrl, outlierMethod, myData):
     Y_test.value_counts().plot(kind="bar", ax=ax, color="royalblue", label="Test")
     plt.legend()
     plt.show()
-
 
     # --------------------------------------------------------------
     # Split feature subsets
@@ -590,7 +640,6 @@ def main(relativeUrl, outlierMethod, myData):
     feature_set_3 = list(set(feature_set_2 + time_features))
     feature_set_4 = list(set(feature_set_3 + freq_features + cluster_features))
 
-
     # --------------------------------------------------------------
     # Perform forward feature selection using simple decision tree
     # --------------------------------------------------------------
@@ -599,8 +648,8 @@ def main(relativeUrl, outlierMethod, myData):
 
     max_features = 10
     selected_features, ordered_features, ordered_scores = learner.forward_selection(
-         max_features, X_train, Y_train
-     )
+        max_features, X_train, Y_train
+    )
     # selected_features = [
     #     "duration",
     #     "acc_x",
@@ -613,7 +662,6 @@ def main(relativeUrl, outlierMethod, myData):
     #     "gyr_r_freq_1.786_Hz_ws_14",
     #     "gyr_r_freq_1.071_Hz_ws_14",
     # ]
-
 
     # ordered_scores = [
     #     0.787715649088462,
@@ -628,14 +676,12 @@ def main(relativeUrl, outlierMethod, myData):
     #     0.9980423345160896,
     # ]
 
-
     plt.figure(figsize=(10, 5))
     plt.plot(np.arange(1, max_features + 1, 1), ordered_scores)
     plt.xlabel("Number of features")
     plt.ylabel("Accuracy")
     plt.xticks(np.arange(1, max_features + 1, 1))
     plt.show()
-
 
     # --------------------------------------------------------------
     # Grid search for best hyperparameters and model selection
@@ -646,7 +692,6 @@ def main(relativeUrl, outlierMethod, myData):
         feature_set_2,
         feature_set_3,
         feature_set_4,
-        selected_features,
     ]
 
     feature_names = [
@@ -654,7 +699,6 @@ def main(relativeUrl, outlierMethod, myData):
         "Feature Set 2",
         "Feature Set 3",
         "Feature Set 4",
-        "Selected Features",
     ]
 
     iterations = 1
@@ -662,15 +706,16 @@ def main(relativeUrl, outlierMethod, myData):
 
     df_train.info(verbose=True)
 
-
     for i, f in zip(range(len(possible_feature_sets)), feature_names):
         print("Feature set:", i)
         selected_train_X = X_train[possible_feature_sets[i]]
         selected_test_X = X_test[possible_feature_sets[i]]
 
         # First run non deterministic classifiers to average their score.
-        performance_test_nn = 0
-        performance_test_rf = 0
+        performance_test_nn_acc = 0
+        performance_test_nn_f1 = 0
+        performance_test_rf_acc = 0
+        performance_test_rf_f1 = 0
 
         for it in range(0, iterations):
             print("\tTraining neural network,", it)
@@ -684,9 +729,10 @@ def main(relativeUrl, outlierMethod, myData):
                 Y_train,
                 selected_test_X,
                 gridsearch=False,
-                saveModel=True
+                saveModel=True,
             )
-            performance_test_nn += accuracy_score(Y_test, class_test_y)
+            performance_test_nn_acc += accuracy_score(Y_test, class_test_y)
+            performance_test_nn_f1 += f1_score(Y_test, class_test_y, average="weighted")
 
             print("\tTraining random forest,", it)
             (
@@ -695,12 +741,19 @@ def main(relativeUrl, outlierMethod, myData):
                 class_train_prob_y,
                 class_test_prob_y,
             ) = learner.random_forest(
-                selected_train_X, Y_train, selected_test_X, gridsearch=True, saveModel=True
+                selected_train_X,
+                Y_train,
+                selected_test_X,
+                gridsearch=True,
+                saveModel=True,
             )
-            performance_test_rf += accuracy_score(Y_test, class_test_y)
+            performance_test_rf_acc += accuracy_score(Y_test, class_test_y)
+            performance_test_rf_f1 += f1_score(Y_test, class_test_y, average="weighted")
 
-        performance_test_nn = performance_test_nn / iterations
-        performance_test_rf = performance_test_rf / iterations
+        performance_test_nn_acc /= iterations
+        performance_test_nn_f1 /= iterations
+        performance_test_rf_acc /= iterations
+        performance_test_rf_f1 /= iterations
 
         # And we run our deterministic classifiers:
         print("\tTraining KNN")
@@ -712,7 +765,8 @@ def main(relativeUrl, outlierMethod, myData):
         ) = learner.k_nearest_neighbor(
             selected_train_X, Y_train, selected_test_X, gridsearch=True
         )
-        performance_test_knn = accuracy_score(Y_test, class_test_y)
+        performance_test_knn_acc = accuracy_score(Y_test, class_test_y)
+        performance_test_knn_f1 = f1_score(Y_test, class_test_y, average="weighted")
 
         print("\tTraining decision tree")
         (
@@ -721,9 +775,10 @@ def main(relativeUrl, outlierMethod, myData):
             class_train_prob_y,
             class_test_prob_y,
         ) = learner.decision_tree(
-            selected_train_X, Y_train, selected_test_X, gridsearch=True,saveModel=True
+            selected_train_X, Y_train, selected_test_X, gridsearch=True, saveModel=True
         )
-        performance_test_dt = accuracy_score(Y_test, class_test_y)
+        performance_test_dt_acc = accuracy_score(Y_test, class_test_y)
+        performance_test_dt_f1 = f1_score(Y_test, class_test_y, average="weighted")
 
         print("\tTraining naive bayes")
         (
@@ -733,18 +788,22 @@ def main(relativeUrl, outlierMethod, myData):
             class_test_prob_y,
         ) = learner.naive_bayes(selected_train_X, Y_train, selected_test_X)
 
-        performance_test_nb = accuracy_score(Y_test, class_test_y)
+        performance_test_nb_acc = accuracy_score(Y_test, class_test_y)
+        performance_test_nb_f1 = f1_score(Y_test, class_test_y, average="weighted")
 
         print("\tTraining support vector machine")
-       
+
         (
             class_train_y,
             class_test_y,
             class_train_prob_y,
             class_test_prob_y,
-        ) = learner.support_vector_machine_without_kernel(selected_train_X, Y_train, selected_test_X)
+        ) = learner.support_vector_machine_without_kernel(
+            selected_train_X, Y_train, selected_test_X
+        )
 
-        performance_test_svm=accuracy_score(Y_test, class_test_y)
+        performance_test_svm_acc = accuracy_score(Y_test, class_test_y)
+        performance_test_svm_f1 = f1_score(Y_test, class_test_y, average="weighted")
 
         # Save results to dataframe
         models = ["NN", "RF", "KNN", "DT", "NB", "SVM"]
@@ -753,18 +812,28 @@ def main(relativeUrl, outlierMethod, myData):
                 "model": models,
                 "feature_set": f,
                 "accuracy": [
-                    performance_test_nn,
-                    performance_test_rf,
-                    performance_test_knn,
-                    performance_test_dt,
-                    performance_test_nb,
-                    performance_test_svm,
+                    performance_test_nn_acc,
+                    performance_test_rf_acc,
+                    performance_test_knn_acc,
+                    performance_test_dt_acc,
+                    performance_test_nb_acc,
+                    performance_test_svm_acc,
+                ],
+                "f1_score": [
+                    performance_test_nn_f1,
+                    performance_test_rf_f1,
+                    performance_test_knn_f1,
+                    performance_test_dt_f1,
+                    performance_test_nb_f1,
+                    performance_test_svm_f1,
                 ],
             }
         )
         score_df = pd.concat([score_df, new_scores])
 
 
+
+    print(score_df)
     # --------------------------------------------------------------
     # Create a grouped bar plot to compare the results
     # --------------------------------------------------------------
@@ -779,11 +848,9 @@ def main(relativeUrl, outlierMethod, myData):
     plt.legend(loc="lower right")
     plt.show()
 
-
     # --------------------------------------------------------------
     # Select best model and evaluate results
     # --------------------------------------------------------------
-
 
     (
         class_train_y,
@@ -794,16 +861,15 @@ def main(relativeUrl, outlierMethod, myData):
         X_train[feature_set_4], Y_train, X_test[feature_set_4], gridsearch=True
     )
 
-    accuracy=accuracy_score(Y_test, class_test_y)
+    accuracy = accuracy_score(Y_test, class_test_y)
 
-    classes=class_test_prob_y.columns
-    cm=confusion_matrix(Y_test, class_test_y, labels=classes)
-
+    classes = class_test_prob_y.columns
+    cm = confusion_matrix(Y_test, class_test_y, labels=classes)
 
     # create confusion matrix for cm
     plt.figure(figsize=(10, 10))
     plt.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
-    plt.title("Confusion matrix")
+    plt.title("Confusion matrix - Random forest - feature set 4")
     plt.colorbar()
     tick_marks = np.arange(len(classes))
     plt.xticks(tick_marks, classes, rotation=45)
@@ -823,20 +889,27 @@ def main(relativeUrl, outlierMethod, myData):
     plt.grid(False)
     plt.show()
 
-
     # --------------------------------------------------------------
     # Select train and test data based on participant
     # --------------------------------------------------------------
 
-    participant_df=df.drop(["set", "category"],axis=1)
-    X_train=participant_df[participant_df["participant"]!=myParticipants['D']].drop("label",axis=1)
-    Y_train=participant_df[participant_df["participant"]!=myParticipants['D']]["label"]
+    participant_df = df.drop(["set", "category"], axis=1)
+    X_train = participant_df[participant_df["participant"] != myParticipants["D"]].drop(
+        "label", axis=1
+    )
+    Y_train = participant_df[participant_df["participant"] != myParticipants["D"]][
+        "label"
+    ]
 
-    X_test=participant_df[participant_df["participant"]==myParticipants['D']].drop("label",axis=1)
-    Y_test=participant_df[participant_df["participant"]==myParticipants['D']]["label"]
+    X_test = participant_df[participant_df["participant"] == myParticipants["D"]].drop(
+        "label", axis=1
+    )
+    Y_test = participant_df[participant_df["participant"] == myParticipants["D"]][
+        "label"
+    ]
 
-    X_train=X_train.drop(["participant"],axis=1)
-    X_test=X_test.drop(["participant"],axis=1)
+    X_train = X_train.drop(["participant"], axis=1)
+    X_test = X_test.drop(["participant"], axis=1)
 
     fig, ax = plt.subplots(figsize=(10, 5))
     df_train["label"].value_counts().plot(
@@ -846,9 +919,6 @@ def main(relativeUrl, outlierMethod, myData):
     Y_test.value_counts().plot(kind="bar", ax=ax, color="royalblue", label="Test")
     plt.legend()
     plt.show()
-
-
-
 
     # --------------------------------------------------------------
     # Use best model again and evaluate results
@@ -863,11 +933,10 @@ def main(relativeUrl, outlierMethod, myData):
         X_train[feature_set_4], Y_train, X_test[feature_set_4], gridsearch=True
     )
 
-    accuracy=accuracy_score(Y_test, class_test_y)
+    accuracy = accuracy_score(Y_test, class_test_y)
 
-    classes=class_test_prob_y.columns
-    cm=confusion_matrix(Y_test, class_test_y, labels=classes)
-
+    classes = class_test_prob_y.columns
+    cm = confusion_matrix(Y_test, class_test_y, labels=classes)
 
     # create confusion matrix for cm
     plt.figure(figsize=(10, 10))
@@ -892,7 +961,6 @@ def main(relativeUrl, outlierMethod, myData):
     plt.grid(False)
     plt.show()
 
-
     # --------------------------------------------------------------
     # Try a simpler model with the selected features
     # --------------------------------------------------------------
@@ -906,11 +974,10 @@ def main(relativeUrl, outlierMethod, myData):
         X_train[feature_set_4], Y_train, X_test[feature_set_4], gridsearch=True
     )
 
-    accuracy=accuracy_score(Y_test, class_test_y)
+    accuracy = accuracy_score(Y_test, class_test_y)
 
-    classes=class_test_prob_y.columns
-    cm=confusion_matrix(Y_test, class_test_y, labels=classes)
-
+    classes = class_test_prob_y.columns
+    cm = confusion_matrix(Y_test, class_test_y, labels=classes)
 
     # create confusion matrix for cm
     plt.figure(figsize=(10, 10))
@@ -936,18 +1003,8 @@ def main(relativeUrl, outlierMethod, myData):
     plt.show()
 
 
- 
-
-
-
-
-
-
-
-
-
 def plot_binary_outliers(dataset, col, outlier_col, reset_index):
-    """ Plot outliers in case of a binary outlier score. Here, the col specifies the real data
+    """Plot outliers in case of a binary outlier score. Here, the col specifies the real data
     column and outlier_col the columns with a binary value (outlier or not).
 
     Args:
@@ -992,6 +1049,7 @@ def plot_binary_outliers(dataset, col, outlier_col, reset_index):
     )
     plt.show()
 
+
 def mark_outliers_iqr(dataset, col):
     """Function to mark values as outliers using the IQR method.
 
@@ -1000,7 +1058,7 @@ def mark_outliers_iqr(dataset, col):
         col (string): The column you want apply outlier detection to
 
     Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column 
+        pd.DataFrame: The original dataframe with an extra boolean column
         indicating whether the value is an outlier or not.
     """
 
@@ -1019,20 +1077,21 @@ def mark_outliers_iqr(dataset, col):
 
     return dataset
 
+
 def mark_outliers_chauvenet(dataset, col, C=2):
     """Finds outliers in the specified column of datatable and adds a binary column with
     the same name extended with '_outlier' that expresses the result per data point.
-    
+
     Taken from: https://github.com/mhoogen/ML4QS/blob/master/Python3Code/Chapter3/OutlierDetection.py
 
     Args:
         dataset (pd.DataFrame): The dataset
         col (string): The column you want apply outlier detection to
-        C (int, optional): Degree of certainty for the identification of outliers given the assumption 
+        C (int, optional): Degree of certainty for the identification of outliers given the assumption
                            of a normal distribution, typicaly between 1 - 10. Defaults to 2.
 
     Returns:
-        pd.DataFrame: The original dataframe with an extra boolean column 
+        pd.DataFrame: The original dataframe with an extra boolean column
         indicating whether the value is an outlier or not.
     """
 
@@ -1063,6 +1122,7 @@ def mark_outliers_chauvenet(dataset, col, C=2):
     dataset[col + "_outlier"] = mask
     return dataset
 
+
 def mark_outliers_lof(dataset, columns, n=20):
     """Mark values as outliers using LOF
 
@@ -1070,12 +1130,12 @@ def mark_outliers_lof(dataset, columns, n=20):
         dataset (pd.DataFrame): The dataset
         col (string): The column you want apply outlier detection to
         n (int, optional): n_neighbors. Defaults to 20.
-    
+
     Returns:
         pd.DataFrame: The original dataframe with an extra boolean column
         indicating whether the value is an outlier or not.
     """
-    
+
     dataset = dataset.copy()
 
     lof = LocalOutlierFactor(n_neighbors=n)
@@ -1087,9 +1147,7 @@ def mark_outliers_lof(dataset, columns, n=20):
     return dataset, outliers, X_scores
 
 
-
-
-relativeUrlWorkoutCounter="../data/interim/01_data_processed_workoutCounter.pkl"
-relativeUrlDave="../data/interim/01_data_processed.pkl"
-outlierMethod="c"
+relativeUrlWorkoutCounter = "../data/interim/01_data_processed_workoutCounter.pkl"
+relativeUrlDave = "../data/interim/01_data_processed.pkl"
+outlierMethod = "c"
 main(relativeUrlWorkoutCounter, outlierMethod, myData=True)
