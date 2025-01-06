@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import scipy
 from sklearn.neighbors import LocalOutlierFactor
+from scipy.stats import ttest_rel
 
 from DataTransformation import LowPassFilter, PrincipalComponentAnalysis
 from TemporalAbstraction import NumericalAbstraction
@@ -703,7 +704,12 @@ def main(relativeUrl, outlierMethod, myData):
 
     iterations = 1
     score_df = pd.DataFrame()
-
+    
+    # Store accuracies for t-tests
+    nn_accuracies = []
+    rf_accuracies = []
+    dt_accuracies = []
+    
     df_train.info(verbose=True)
 
     for i, f in zip(range(len(possible_feature_sets)), feature_names):
@@ -805,6 +811,10 @@ def main(relativeUrl, outlierMethod, myData):
         performance_test_svm_acc = accuracy_score(Y_test, class_test_y)
         performance_test_svm_f1 = f1_score(Y_test, class_test_y, average="weighted")
 
+        nn_accuracies.append(performance_test_nn_acc)
+        rf_accuracies.append(performance_test_rf_acc)
+        dt_accuracies.append(performance_test_dt_acc)
+
         # Save results to dataframe
         models = ["NN", "RF", "KNN", "DT", "NB", "SVM"]
         new_scores = pd.DataFrame(
@@ -831,10 +841,47 @@ def main(relativeUrl, outlierMethod, myData):
         )
         score_df = pd.concat([score_df, new_scores])
 
+    # Perform pairwise t-tests
+    print("Performing pairwise t-tests")
+    ttest_results = []
+    if len(nn_accuracies) > 1:  # Ensure enough data for t-tests
+        t_nn_rf, p_nn_rf = ttest_rel(nn_accuracies, rf_accuracies)
+        t_nn_dt, p_nn_dt = ttest_rel(nn_accuracies, dt_accuracies)
+        t_rf_dt, p_rf_dt = ttest_rel(rf_accuracies, dt_accuracies)
 
+        print("T-test NN vs RF: t-statistic =", t_nn_rf, ", p-value =", p_nn_rf)
+        print("T-test NN vs DT: t-statistic =", t_nn_dt, ", p-value =", p_nn_dt)
+        print("T-test RF vs DT: t-statistic =", t_rf_dt, ", p-value =", p_rf_dt)
+    else:
+        print("Not enough data to perform t-tests")
 
-    print(score_df)
-    # --------------------------------------------------------------
+    # Visualization of t-test results
+    if ttest_results:
+        comparisons = [result["Comparison"] for result in ttest_results]
+        t_statistics = [result["t-statistic"] for result in ttest_results]
+        p_values = [result["p-value"] for result in ttest_results]
+
+        x = np.arange(len(comparisons))
+        width = 0.35
+
+        fig, ax1 = plt.subplots(figsize=(10, 6))
+
+        bars1 = ax1.bar(x - width / 2, t_statistics, width, label="t-statistic")
+        ax1.set_ylabel("t-statistic")
+        ax1.set_title("Pairwise T-test Results")
+        ax1.set_xticks(x)
+        ax1.set_xticklabels(comparisons)
+
+        ax2 = ax1.twinx()
+        bars2 = ax2.bar(x + width / 2, p_values, width, color="orange", label="p-value")
+        ax2.set_ylabel("p-value")
+
+        fig.legend(loc="upper right")
+        plt.tight_layout()
+        plt.show()
+
+        print(score_df)
+        # --------------------------------------------------------------
     # Create a grouped bar plot to compare the results
     # --------------------------------------------------------------
 
